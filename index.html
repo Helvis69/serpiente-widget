@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Serpiente Realista</title>
+    <link rel="stylesheet" href="estilos.css">
+</head>
+<body>
+    <canvas id="serpienteCanvas"></canvas>
+    <script src="serpiente.js"></script>
+    <script>
+        window.onload = () => {
+            const canvas = document.getElementById('serpienteCanvas');
+            const ctx = canvas.getContext('2d');
+            const serpiente = new Serpiente(ctx, canvas.width, canvas.height);
+            serpiente.iniciar();
+        };
+    </script>
+</body>
+</html>
