@@ -1,31 +1,26 @@
 (function(global) {
   function SnakeWidget() {
     let canvas, ctx;
-    let segmentCount = 20;
-    let segmentLength = 20;
-    let segments = [];
-    let headLift = 0;
-    let lifting = false;
-    let offsetX = 0;
-    let speed = 2;
-    let animationId;
+    const segmentCount = 30;
+    const segmentLength = 15;
+    const snakeColor = '#2ecc71';
+    const headColor = '#27ae60';
+    const eyeColor = '#ffffff';
+    const pupilColor = '#000000';
 
-    // Crear canvas y añadir al body
-    this.createCanvas = function(width, height, position = 'bottom') {
+    let segments = [];
+    let waveOffset = 0;
+
+    this.createCanvas = function(height = 150) {
       canvas = document.createElement('canvas');
+      canvas.id = 'snakeCanvas';
       canvas.style.position = 'fixed';
       canvas.style.left = '0';
+      canvas.style.bottom = '0';
       canvas.style.width = '100%';
       canvas.style.height = height + 'px';
       canvas.style.zIndex = '9999';
-      canvas.style.background = 'transparent';
-      canvas.style.pointerEvents = 'none'; // para que no interfiera clicks
-
-      if(position === 'bottom') {
-        canvas.style.bottom = '0';
-      } else if(position === 'top') {
-        canvas.style.top = '0';
-      }
+      canvas.style.pointerEvents = 'none';
       document.body.appendChild(canvas);
 
       canvas.width = window.innerWidth;
@@ -40,72 +35,71 @@
 
     this.initSegments = function(height) {
       segments = [];
-      for(let i = 0; i < segmentCount; i++) {
-        segments.push({x: i * segmentLength, y: height - 30});
+      const y = height - 40;
+      for (let i = 0; i < segmentCount; i++) {
+        segments.push({ x: i * segmentLength, y: y });
+      }
+    };
+
+    this.update = function() {
+      waveOffset += 0.1;
+      for (let i = 0; i < segmentCount; i++) {
+        const wave = Math.sin(i * 0.4 + waveOffset) * 10;
+        segments[i].y = canvas.height - 40 + wave;
+
+        // Para que los segmentos estén alineados horizontalmente
+        if (i > 0) {
+          segments[i].x = segments[i - 1].x + segmentLength;
+        }
       }
     };
 
     this.draw = function() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      offsetX += speed;
-      if (offsetX > segmentLength) {
-        offsetX = 0;
-        for (let i = 0; i < segmentCount - 1; i++) {
-          segments[i].x = segments[i + 1].x;
-        }
-        segments[segmentCount - 1].x = segments[segmentCount - 2].x - segmentLength;
-      }
-
-      ctx.fillStyle = 'green';
+      // Dibujar cuerpo
       for (let i = 0; i < segmentCount - 1; i++) {
         ctx.beginPath();
-        ctx.arc(segments[i].x + offsetX, segments[i].y, 10, 0, Math.PI * 2);
+        ctx.fillStyle = snakeColor;
+        ctx.arc(segments[i].x, segments[i].y, 8, 0, Math.PI * 2);
         ctx.fill();
       }
 
+      // Dibujar cabeza
+      const head = segments[segmentCount - 1];
       ctx.beginPath();
-      ctx.fillStyle = 'darkgreen';
-      ctx.arc(segments[segmentCount - 1].x + offsetX, segments[segmentCount - 1].y - headLift, 12, 0, Math.PI * 2);
+      ctx.fillStyle = headColor;
+      ctx.arc(head.x, head.y - 10, 10, 0, Math.PI * 2);
       ctx.fill();
 
-      ctx.fillStyle = 'white';
+      // Ojos
+      ctx.fillStyle = eyeColor;
       ctx.beginPath();
-      ctx.arc(segments[segmentCount - 1].x + offsetX - 5, segments[segmentCount - 1].y - headLift - 3, 3, 0, Math.PI * 2);
-      ctx.arc(segments[segmentCount - 1].x + offsetX + 5, segments[segmentCount - 1].y - headLift - 3, 3, 0, Math.PI * 2);
+      ctx.arc(head.x - 4, head.y - 13, 3, 0, Math.PI * 2);
+      ctx.arc(head.x + 4, head.y - 13, 3, 0, Math.PI * 2);
       ctx.fill();
 
-      ctx.fillStyle = 'black';
+      // Pupilas
+      ctx.fillStyle = pupilColor;
       ctx.beginPath();
-      ctx.arc(segments[segmentCount - 1].x + offsetX - 5, segments[segmentCount - 1].y - headLift - 3, 1.5, 0, Math.PI * 2);
-      ctx.arc(segments[segmentCount - 1].x + offsetX + 5, segments[segmentCount - 1].y - headLift - 3, 1.5, 0, Math.PI * 2);
+      ctx.arc(head.x - 4, head.y - 13, 1.5, 0, Math.PI * 2);
+      ctx.arc(head.x + 4, head.y - 13, 1.5, 0, Math.PI * 2);
       ctx.fill();
-
-      if (lifting) {
-        headLift += 1;
-        if (headLift > 30) lifting = false;
-      } else {
-        headLift -= 1;
-        if (headLift < 0) lifting = true;
-      }
     };
 
-    this.animate = () => {
+    this.animate = function() {
+      this.update();
       this.draw();
-      animationId = requestAnimationFrame(this.animate);
+      requestAnimationFrame(this.animate.bind(this));
     };
 
     this.init = function(options = {}) {
-      let width = options.width || window.innerWidth;
-      let height = options.height || 150;
-      let position = options.position || 'bottom';
-
-      this.createCanvas(width, height, position);
+      const height = options.height || 150;
+      this.createCanvas(height);
       this.initSegments(height);
       this.animate();
     };
   }
 
   global.SnakeWidget = new SnakeWidget();
-
 })(window);
